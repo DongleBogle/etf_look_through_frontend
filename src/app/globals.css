@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+  --card-bg: rgba(28, 25, 23, 0.6);
+  --card-border: rgba(68, 64, 60, 0.8);
+  --accent: #f59e0b;
+  --accent-muted: rgba(245, 158, 11, 0.2);
+  --gradient-from: #0c0a09;
+  --gradient-via: #1c1917;
+  --gradient-to: #292524;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 113, 108, 0.5) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.5);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 162, 158, 0.6);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
 }
+
+/* Subtle grid pattern for depth */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(120, 113, 108, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 113, 108, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Card hover glow */
+.card-glow {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
+}
+
