@@ -77,13 +77,13 @@ export default function PortfolioPage() {
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-stone-500">미국 (QLD, USD 등)</label>
+              <label className="mb-1.5 block text-xs font-medium text-stone-500">미국 (SPY, QQQ 등)</label>
               <textarea
                 value={usTickers}
                 onChange={(e) => setUsTickers(e.target.value)}
                 rows={2}
                 className="w-full rounded-xl border border-stone-700/80 bg-stone-900/80 px-3 py-2.5 text-sm text-stone-200 placeholder:text-stone-600 transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-                placeholder="QLD, USD"
+                placeholder="SPY, QQQ"
               />
             </div>
             <div>
@@ -97,7 +97,7 @@ export default function PortfolioPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-stone-500">코스닉</label>
+              <label className="mb-1.5 block text-xs font-medium text-stone-500">코스닥</label>
               <textarea
                 value={kqTickers}
                 onChange={(e) => setKqTickers(e.target.value)}
