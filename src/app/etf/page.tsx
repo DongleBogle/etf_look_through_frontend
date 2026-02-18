@@ -56,7 +56,7 @@ export default function ETFDetailPage() {
             onChange={(e) => setTicker(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="QQQ, SPY, 069500.KS"
-            className="w-72 rounded-xl border border-stone-700/80 bg-stone-900/80 px-4 py-2.5 text-stone-200 placeholder:text-stone-600 transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+            className="w-full min-w-0 rounded-xl border border-stone-700/80 bg-stone-900/80 px-4 py-2.5 text-stone-200 placeholder:text-stone-600 transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 sm:w-72"
           />
         </div>
         <button

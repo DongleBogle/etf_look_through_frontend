@@ -45,10 +45,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${outfit.variable} font-sans antialiased`}>
-        <div className="relative flex min-h-screen bg-stone-950 text-stone-100 bg-grid-pattern">
+        <div className="relative flex min-h-screen min-w-0 overflow-x-hidden bg-stone-950 text-stone-100 bg-grid-pattern">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-950 to-amber-950/10" aria-hidden />
           <Sidebar />
-          <main className="relative flex-1 overflow-auto p-6 lg:p-8 lg:pl-10">{children}</main>
+          <main className="relative min-w-0 flex-1 overflow-auto p-4 pt-14 md:p-6 md:pt-6 lg:p-8 lg:pl-10">{children}</main>
         </div>
       </body>
     </html>
