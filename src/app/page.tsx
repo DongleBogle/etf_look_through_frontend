@@ -168,7 +168,7 @@ export default function PortfolioPage() {
             {/* 입력 모드 토글 */}
             <div className="mb-4 flex items-center justify-between">
               <p className="text-xs font-medium text-stone-500">
-                {isDirectInput ? "ETF를 입력해주세요" : "종목을 드래그하여 아래에 추가하세요"}
+                {isDirectInput ? "ETF를 입력해주세요" : "종목을 체크하여 추가하세요"}
               </p>
               <button
                 onClick={() => setIsDirectInput(!isDirectInput)}
@@ -190,20 +190,8 @@ export default function PortfolioPage() {
                     return (
                       <span
                         key={ticker}
-                        draggable={!alreadyAdded}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("ticker", ticker);
-                          e.dataTransfer.setData("region", "us");
-                          e.dataTransfer.effectAllowed = "copy";
-                        }}
                         onClick={() => {
-                          if (isDirectInput && !alreadyAdded) {
-                            const updated = usTickers.trim()
-                              ? `${usTickers}, ${ticker}`
-                              : ticker;
-                            setUsTickers(updated);
-                            setQuantities((prev) => ({ ...prev, [ticker]: 10 }));
-                          } else if (alreadyAdded) {
+                          if (alreadyAdded) {
                             const updated = usList.filter(t => t !== ticker).join(", ");
                             setUsTickers(updated);
                             setQuantities(prev => {
@@ -211,14 +199,18 @@ export default function PortfolioPage() {
                               delete newQuantities[ticker];
                               return newQuantities;
                             });
+                          } else {
+                            const updated = usTickers.trim()
+                              ? `${usTickers}, ${ticker}`
+                              : ticker;
+                            setUsTickers(updated);
+                            setQuantities((prev) => ({ ...prev, [ticker]: 10 }));
                           }
                         }}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
                           alreadyAdded
-                            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400/60 cursor-pointer hover:bg-red-500/10 hover:border-red-500/30"
-                            : isDirectInput 
-                              ? "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800 cursor-pointer"
-                              : "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800 cursor-grab active:cursor-grabbing"
+                            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
+                            : "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800"
                         }`}
                       >
                         {ticker}
@@ -238,24 +230,8 @@ export default function PortfolioPage() {
                     return (
                       <span
                         key={item.ticker}
-                        draggable={!alreadyAdded}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData("ticker", item.ticker);
-                          e.dataTransfer.setData("region", "ks");
-                          e.dataTransfer.effectAllowed = "copy";
-                        }}
                         onClick={() => {
-                          if (isDirectInput && !alreadyAdded) {
-                            const updatedTickers = ksTickers.trim()
-                              ? `${ksTickers}, ${item.ticker}`
-                              : item.ticker;
-                            const updatedDisplay = ksTickersDisplay.trim()
-                              ? `${ksTickersDisplay}, ${item.name}`
-                              : item.name;
-                            setKsTickers(updatedTickers);
-                            setKsTickersDisplay(updatedDisplay);
-                            setQuantities((prev) => ({ ...prev, [item.ticker + ".KS"]: 10 }));
-                          } else if (alreadyAdded) {
+                          if (alreadyAdded) {
                             const updated = ksList.filter(t => t !== item.ticker).join(", ");
                             const updatedDisplay = updated.split(",").map(t => getKsTickerName(t.trim())).join(", ");
                             setKsTickers(updated);
@@ -265,14 +241,22 @@ export default function PortfolioPage() {
                               delete newQuantities[item.ticker + ".KS"];
                               return newQuantities;
                             });
+                          } else {
+                            const updatedTickers = ksTickers.trim()
+                              ? `${ksTickers}, ${item.ticker}`
+                              : item.ticker;
+                            const updatedDisplay = ksTickersDisplay.trim()
+                              ? `${ksTickersDisplay}, ${item.name}`
+                              : item.name;
+                            setKsTickers(updatedTickers);
+                            setKsTickersDisplay(updatedDisplay);
+                            setQuantities((prev) => ({ ...prev, [item.ticker + ".KS"]: 10 }));
                           }
                         }}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
                           alreadyAdded
-                            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400/60 cursor-pointer hover:bg-red-500/10 hover:border-red-500/30"
-                            : isDirectInput 
-                              ? "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800 cursor-pointer"
-                              : "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800 cursor-grab active:cursor-grabbing"
+                            ? "border border-amber-500/30 bg-amber-500/10 text-amber-400"
+                            : "border border-stone-700 bg-stone-800/80 text-stone-300 hover:border-amber-500/40 hover:bg-stone-800"
                         }`}
                       >
                         {item.name}
@@ -493,14 +477,18 @@ export default function PortfolioPage() {
                             }`}
                           >
                             <td className="px-5 py-3 font-medium">
-                              <a
-                                href={`https://finance.yahoo.com/quote/${e.name}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-amber-400 hover:text-amber-300 hover:underline transition-colors"
-                              >
-                                {e.name}
-                              </a>
+                              {e.name === "기타(미분류)" ? (
+                                <span className="text-amber-400">{e.name}</span>
+                              ) : (
+                                <a
+                                  href={`https://finance.yahoo.com/quote/${e.name}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-amber-400 hover:text-amber-300 hover:underline transition-colors"
+                                >
+                                  {e.name}
+                                </a>
+                              )}
                             </td>
                             <td className="px-5 py-3 text-right tabular-nums text-stone-300">
                               $
