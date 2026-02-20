@@ -268,8 +268,15 @@ export default function PortfolioPage() {
                               i % 2 === 0 ? "bg-stone-900/20" : ""
                             }`}
                           >
-                            <td className="px-5 py-3 font-medium text-stone-200">
-                              {e.name}
+                            <td className="px-5 py-3 font-medium">
+                              <a
+                                href={`https://finance.yahoo.com/quote/${e.name}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-amber-400 hover:text-amber-300 hover:underline transition-colors"
+                              >
+                                {e.name}
+                              </a>
                             </td>
                             <td className="px-5 py-3 text-right tabular-nums text-stone-300">
                               $

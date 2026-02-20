@@ -145,7 +145,16 @@ export default function ETFDetailPage() {
                         key={`${h.ticker}-${h.name}`}
                         className={`border-b border-stone-800/50 transition-colors hover:bg-stone-800/30 ${i % 2 === 0 ? "bg-stone-900/20" : ""}`}
                       >
-                        <td className="px-5 py-3 font-mono text-xs text-stone-400">{h.ticker}</td>
+                        <td className="px-5 py-3 font-mono text-xs">
+                          <a
+                            href={`https://finance.yahoo.com/quote/${h.ticker}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-400 hover:text-amber-300 hover:underline transition-colors"
+                          >
+                            {h.ticker}
+                          </a>
+                        </td>
                         <td className="px-5 py-3 font-medium text-stone-200">{h.name}</td>
                         <td className="px-5 py-3 text-right font-semibold tabular-nums text-amber-400">{h.weight_pct.toFixed(2)}%</td>
                       </tr>
@@ -177,10 +186,26 @@ export default function ETFDetailPage() {
                     </Pie>
                     <Tooltip
                       formatter={(v) => (v != null ? `${Number(v).toFixed(2)}%` : "")}
-                      contentStyle={{ backgroundColor: "rgba(28,25,23,0.95)", border: "1px solid rgb(68,64,60)", borderRadius: "12px" }}
-                      labelStyle={{ color: "#fafaf9" }}
+                      contentStyle={{
+                        backgroundColor: "rgba(28,25,23,0.95)",
+                        border: "1px solid rgba(245,158,11,0.3)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                        padding: "10px 14px",
+                      }}
+                      itemStyle={{ color: "#fbbf24" }}
+                      labelStyle={{
+                        color: "#fafaf9",
+                        fontWeight: 600,
+                        marginBottom: "4px",
+                      }}
                     />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                    <Legend 
+                      wrapperStyle={{ fontSize: "12px" }}
+                      formatter={(value) => (
+                        <span style={{ color: "#fafaf9" }}>{value}</span>
+                      )}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
