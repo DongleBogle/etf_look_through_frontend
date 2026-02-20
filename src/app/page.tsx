@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -39,7 +39,11 @@ export default function PortfolioPage() {
   const [usTickers, setUsTickers] = useState("SPY, QQQ");
   const [ksTickers, setKsTickers] = useState("069500");
   const [kqTickers, setKqTickers] = useState("");
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({
+    "SPY": 10,
+    "QQQ": 10,
+    "069500.KS": 10,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Awaited<
@@ -91,6 +95,10 @@ export default function PortfolioPage() {
 
   const totalQty = Object.values(quantities).reduce((a, b) => a + b, 0);
 
+  useEffect(() => {
+    handleAnalyze();
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
@@ -134,18 +142,6 @@ export default function PortfolioPage() {
                 rows={2}
                 className="w-full rounded-xl border border-stone-700/80 bg-stone-900/80 px-3 py-2.5 text-sm text-stone-200 placeholder:text-stone-600 transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
                 placeholder="069500"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-stone-500">
-                코스닥
-              </label>
-              <textarea
-                value={kqTickers}
-                onChange={(e) => setKqTickers(e.target.value)}
-                rows={2}
-                className="w-full rounded-xl border border-stone-700/80 bg-stone-900/80 px-3 py-2.5 text-sm text-stone-200 placeholder:text-stone-600 transition-all focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-                placeholder=""
               />
             </div>
             {allTickers.length > 0 && (
