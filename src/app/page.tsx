@@ -23,6 +23,16 @@ const CHART_COLORS = [
   "#f97316",
   "#6366f1",
   "#14b8a6",
+  "#d946ef",
+  "#facc15",
+  "#0ea5e9",
+  "#a3e635",
+  "#a78bfa",
+  "#2dd4bf",
+  "#fb923c",
+  "#818cf8",
+  "#22c55e",
+  "#7dd3fc",
 ];
 
 export default function PortfolioPage() {
@@ -321,10 +331,17 @@ export default function PortfolioPage() {
                           }
                           contentStyle={{
                             backgroundColor: "rgba(28,25,23,0.95)",
-                            border: "1px solid rgb(68,64,60)",
+                            border: "1px solid rgba(245,158,11,0.3)",
                             borderRadius: "12px",
+                            boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                            padding: "10px 14px",
                           }}
-                          labelStyle={{ color: "#fafaf9" }}
+                          itemStyle={{ color: "#fbbf24" }}
+                          labelStyle={{
+                            color: "#fafaf9",
+                            fontWeight: 600,
+                            marginBottom: "4px",
+                          }}
                         />
                         <Legend wrapperStyle={{ fontSize: "12px" }} />
                       </PieChart>
