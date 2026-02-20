@@ -67,3 +67,22 @@ export async function getETFDetail(ticker: string): Promise<ETFDetailResponse> {
   }
   return res.json();
 }
+
+export interface IndexData {
+  name: string;
+  ticker: string;
+  current_price: number;
+  change: number;
+  change_percent: number;
+  market_state: "REGULAR" | "PRE" | "POST" | "CLOSED" | string;
+}
+
+export interface IndicesResponse {
+  indices: IndexData[];
+}
+
+export async function getIndices(): Promise<IndicesResponse> {
+  const res = await fetch(`${API_BASE}/api/indices`);
+  if (!res.ok) throw new Error("지수 조회 실패");
+  return res.json();
+}
