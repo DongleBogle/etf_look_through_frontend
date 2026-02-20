@@ -40,8 +40,8 @@ export default function PortfolioPage() {
   const [ksTickers, setKsTickers] = useState("069500");
   const [kqTickers, setKqTickers] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({
-    "SPY": 10,
-    "QQQ": 10,
+    SPY: 10,
+    QQQ: 10,
     "069500.KS": 10,
   });
   const [loading, setLoading] = useState(false);
@@ -106,7 +106,7 @@ export default function PortfolioPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
             <BarChart3 className="h-5 w-5 text-amber-400" />
           </div>
-          내 글로벌 포트폴리오 분석
+          포트폴리오 분석
         </h1>
         <p className="mt-2 text-sm text-stone-500">
           보유 ETF를 입력하고 실제 종목별 노출 비중을 한눈에 확인하세요
