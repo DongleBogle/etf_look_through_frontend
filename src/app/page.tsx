@@ -26,7 +26,7 @@ const CHART_COLORS = [
 ];
 
 export default function PortfolioPage() {
-  const [usTickers, setUsTickers] = useState("QLD, USD");
+  const [usTickers, setUsTickers] = useState("SPY, QQQ");
   const [ksTickers, setKsTickers] = useState("069500");
   const [kqTickers, setKqTickers] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
