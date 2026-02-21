@@ -45,6 +45,36 @@ const US_PRESET_TICKERS = [
   "VWO", "VUG", "VXUS", "VTV", "SOXX", "QLD", "SSO", "SCHD", "USD",
 ];
 
+const CustomXAxisTick = ({ x, y, payload, remainingStocks, onHover, onLeave }: {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+  remainingStocks?: Array<{ name: string; weight_pct: number }>;
+  onHover?: (e: React.MouseEvent) => void;
+  onLeave?: () => void;
+}) => {
+  const isLastTick = remainingStocks && remainingStocks.length > 0;
+  
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        fill="#a8a29e"
+        fontSize={9}
+        transform="rotate(-45)"
+        style={{ cursor: isLastTick ? "pointer" : "default" }}
+        onMouseEnter={isLastTick ? onHover : undefined}
+        onMouseLeave={isLastTick ? onLeave : undefined}
+      >
+        {payload?.value}
+      </text>
+    </g>
+  );
+};
+
 const KS_PRESET_TICKERS = [
   { ticker: "069500", name: "KODEX 200" },
   { ticker: "102110", name: "TIGER 200" },
@@ -65,6 +95,8 @@ export default function PortfolioPage() {
   const [usSearchQuery, setUsSearchQuery] = useState("");
   const [chartType, setChartType] = useState<"donut" | "bar">("donut");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemainingTooltip, setShowRemainingTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   
   const getKsTickerName = (ticker: string) => {
     const cleanTicker = ticker.replace(/\.(KS|KQ)$/, "");
@@ -649,6 +681,28 @@ export default function PortfolioPage() {
                   </div>
                 </div>
 
+                {/* 커스텀 툴팁 */}
+                {showRemainingTooltip && result && (
+                  <div 
+                    className="fixed z-50 max-w-xs rounded-lg border border-stone-700 bg-stone-900 p-3 text-xs text-stone-300 shadow-lg"
+                    style={{
+                      left: tooltipPosition.x - 10,
+                      top: tooltipPosition.y - 10,
+                      transform: 'translate(-100%, -100%)'
+                    }}
+                  >
+                    <div className="font-medium text-amber-400 mb-2">더 보기:</div>
+                    <div className="space-y-1">
+                      {result.exposures.filter(e => e.name !== "기타(미분류)").slice(15).map((e, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span>{e.name}</span>
+                          <span className="text-amber-400">{e.weight_pct.toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -674,115 +728,180 @@ export default function PortfolioPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="h-[320px]">
+                  <div className="h-[400px] flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       {chartType === "bar" ? (
-                        <BarChart data={result.exposures.filter(e => e.name !== "기타(미분류)").map(e => ({
-                          ...e,
-                          name: e.name === "기타(미분류)" ? "기타" : e.name
-                        }))}>
-                          <XAxis 
-                            dataKey="name" 
-                            tick={{ fontSize: 9, fill: "#a8a29e" }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={110}
-                            interval={0}
-                            tickMargin={5}
-                          />
-                          <YAxis 
-                            tick={{ fontSize: 10, fill: "#a8a29e" }}
-                            tickFormatter={(value) => `${value.toFixed(1)}%`}
-                          />
-                          <Tooltip
-                            formatter={(v, name, props) =>
-                              props?.payload?.weight_pct != null
-                                ? `${props.payload.weight_pct.toFixed(1)}%`
-                                : ""
-                            }
-                            contentStyle={{
-                              backgroundColor: "rgba(28,25,23,0.95)",
-                              border: "1px solid rgba(245,158,11,0.3)",
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
-                              padding: "10px 14px",
-                            }}
-                            itemStyle={{ color: "#fbbf24" }}
-                            labelStyle={{
-                              color: "#fafaf9",
-                              fontWeight: 600,
-                              marginBottom: "4px",
-                            }}
-                          />
-                          <Bar dataKey="weight_pct" fill="#f59e0b" />
-                        </BarChart>
-                      ) : (
-                        <PieChart>
-                          <Pie
-                            data={result.exposures.map(e => ({
+                        <>
+                          <BarChart data={(() => {
+                            const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
+                            const displayData = filteredData.slice(0, 15).map(e => ({
                               ...e,
                               name: e.name === "기타(미분류)" ? "기타" : e.name
-                            }))}
-                            dataKey="amount_usd"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={100}
-                            paddingAngle={2}
-                          >
-                            {result.exposures.map((_, i) => (
-                              <Cell
-                                key={i}
-                                fill={CHART_COLORS[i % CHART_COLORS.length]}
-                                stroke="none"
-                              />
-                            ))}
-                          </Pie>
-                          {chartType === "donut" && (
-                            <>
-                              <Pie
-                                data={[{ value: 1 }]}
-                                dataKey="value"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={50}
-                                fill="rgba(68,64,60,0.3)"
-                                stroke="none"
-                                isAnimationActive={false}
-                                legendType="none"
-                                tooltipType="none"
-                              />
-                              <text x="50%" y="43%" textAnchor="middle" dominantBaseline="middle" fill="#fbbf24" fontSize={16} fontWeight={600}>
-                                ${Math.round(result.total_invested_usd).toLocaleString("en-US")}
-                              </text>
-                              <text x="50%" y="49%" textAnchor="middle" dominantBaseline="middle" fill="#a8a29e" fontSize={11}>
-                                총 투자액
-                              </text>
-                            </>
-                          )}
-                          <Tooltip
-                            formatter={(v, name, props) =>
-                              props?.payload?.weight_pct != null
-                                ? `${props.payload.weight_pct.toFixed(1)}%`
-                                : ""
+                            }));
+                            const remainingCount = filteredData.length - 15;
+                            if (remainingCount > 0) {
+                              displayData[displayData.length - 1] = {
+                                ...displayData[displayData.length - 1],
+                                name: displayData[displayData.length - 1].name + ` (+${remainingCount}개)`
+                              };
                             }
-                            contentStyle={{
-                              backgroundColor: "rgba(28,25,23,0.95)",
-                              border: "1px solid rgba(245,158,11,0.3)",
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
-                              padding: "10px 14px",
-                            }}
-                            itemStyle={{ color: "#fbbf24" }}
-                            labelStyle={{
-                              color: "#fafaf9",
-                              fontWeight: 600,
-                              marginBottom: "4px",
-                            }}
-                          />
-                          <Legend wrapperStyle={{ fontSize: "12px" }} />
-                        </PieChart>
+                            return displayData;
+                          })()}>
+                            <XAxis 
+                              dataKey="name"
+                              tick={(props) => {
+                                const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
+                                const displayData = filteredData.slice(0, 15);
+                                const remainingCount = filteredData.length - 15;
+                                const isLastTick = props.index === displayData.length - 1 && remainingCount > 0;
+                                
+                                return (
+                                  <CustomXAxisTick
+                                    {...props}
+                                    remainingStocks={isLastTick ? filteredData.slice(15) : undefined}
+                                    onHover={(e) => {
+                                      setShowRemainingTooltip(true);
+                                      setTooltipPosition({ x: e.clientX, y: e.clientY });
+                                    }}
+                                    onLeave={() => setShowRemainingTooltip(false)}
+                                  />
+                                );
+                              }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={110}
+                              interval={0}
+                              tickMargin={5}
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 10, fill: "#a8a29e" }}
+                              tickFormatter={(value) => `${value.toFixed(1)}%`}
+                            />
+                            <Tooltip
+                              formatter={(v, name, props) =>
+                                props?.payload?.weight_pct != null
+                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  : ""
+                              }
+                              contentStyle={{
+                                backgroundColor: "rgba(28,25,23,0.95)",
+                                border: "1px solid rgba(245,158,11,0.3)",
+                                borderRadius: "12px",
+                                boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                                padding: "10px 14px",
+                              }}
+                              itemStyle={{ color: "#fbbf24" }}
+                              labelStyle={{
+                                color: "#fafaf9",
+                                fontWeight: 600,
+                                marginBottom: "4px",
+                              }}
+                            />
+                            <Bar dataKey="weight_pct" fill="#f59e0b" />
+                          </BarChart>
+                        </>
+                      ) : (
+                        <>
+                          <PieChart>
+                            <Pie
+                              data={(() => {
+                                const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
+                                const displayData = filteredData.slice(0, 15).map(e => ({
+                                  ...e,
+                                  name: e.name === "기타(미분류)" ? "기타" : e.name
+                                }));
+                                return displayData;
+                              })()}
+                              dataKey="amount_usd"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={100}
+                              paddingAngle={2}
+                            >
+                              {(() => {
+                                const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
+                                const displayData = filteredData.slice(0, 15);
+                                return displayData.map((_, i) => (
+                                  <Cell
+                                    key={i}
+                                    fill={CHART_COLORS[i % CHART_COLORS.length]}
+                                    stroke="none"
+                                  />
+                                ));
+                              })()}
+                            </Pie>
+                            {chartType === "donut" && (
+                              <>
+                                <Pie
+                                  data={[{ value: 1 }]}
+                                  dataKey="value"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={50}
+                                  fill="rgba(68,64,60,0.3)"
+                                  stroke="none"
+                                  isAnimationActive={false}
+                                  legendType="none"
+                                  tooltipType="none"
+                                />
+                                <text x="50%" y="43%" textAnchor="middle" dominantBaseline="middle" fill="#fbbf24" fontSize={16} fontWeight={600}>
+                                  ${Math.round(result.total_invested_usd).toLocaleString("en-US")}
+                                </text>
+                                <text x="50%" y="49%" textAnchor="middle" dominantBaseline="middle" fill="#a8a29e" fontSize={11}>
+                                  총 투자액
+                                </text>
+                              </>
+                            )}
+                            <Tooltip
+                              formatter={(v, name, props) =>
+                                props?.payload?.weight_pct != null
+                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  : ""
+                              }
+                              contentStyle={{
+                                backgroundColor: "rgba(28,25,23,0.95)",
+                                border: "1px solid rgba(245,158,11,0.3)",
+                                borderRadius: "12px",
+                                boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                                padding: "10px 14px",
+                              }}
+                              itemStyle={{ color: "#fbbf24" }}
+                              labelStyle={{
+                                color: "#fafaf9",
+                                fontWeight: 600,
+                                marginBottom: "4px",
+                              }}
+                            />
+                            <Legend 
+                              wrapperStyle={{ fontSize: "12px" }}
+                              formatter={(value, entry, index) => {
+                                const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
+                                const isLastDisplayed = index === Math.min(15, filteredData.length) - 1;
+                                const remainingCount = filteredData.length - 15;
+                                
+                                return (
+                                  <span style={{ color: "#fafaf9" }}>
+                                    {value}
+                                    {isLastDisplayed && remainingCount > 0 && (
+                                      <span 
+                                        style={{ color: "#a8a29e", marginLeft: "8px", cursor: "pointer" }}
+                                        onMouseEnter={(e) => {
+                                          setShowRemainingTooltip(true);
+                                          setTooltipPosition({ x: e.clientX, y: e.clientY });
+                                        }}
+                                        onMouseLeave={() => setShowRemainingTooltip(false)}
+                                      >
+                                        +{remainingCount}개
+                                      </span>
+                                    )}
+                                  </span>
+                                );
+                              }}
+                            />
+                          </PieChart>
+                        </>
                       )}
                     </ResponsiveContainer>
                   </div>
