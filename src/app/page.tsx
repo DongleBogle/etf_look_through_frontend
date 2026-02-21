@@ -8,9 +8,14 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
 } from "recharts";
-import { BarChart3, TrendingUp, Wallet, Sparkles, Search } from "lucide-react";
+import { BarChart3, TrendingUp, Wallet, Sparkles, Search, Plus, X } from "lucide-react";
 import { analyzePortfolio } from "@/lib/api";
+import { US_ETFS } from "@/lib/etf-data";
 
 const CHART_COLORS = [
   "#f59e0b",
@@ -56,12 +61,32 @@ export default function PortfolioPage() {
   const [ksTickers, setKsTickers] = useState("069500");
   const [ksTickersDisplay, setKsTickersDisplay] = useState("KODEX 200");
   const [isDirectInput, setIsDirectInput] = useState(false);
+  const [showUsSearch, setShowUsSearch] = useState(false);
+  const [usSearchQuery, setUsSearchQuery] = useState("");
+  const [chartType, setChartType] = useState<"pie" | "donut" | "bar">("pie");
   
   const getKsTickerName = (ticker: string) => {
     const cleanTicker = ticker.replace(/\.(KS|KQ)$/, "");
     const found = KS_PRESET_TICKERS.find(item => item.ticker === cleanTicker);
     return found ? found.name : ticker;
   };
+
+  const filteredUsEtfs = US_ETFS.filter(etf => 
+    etf.ticker.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
+    etf.name.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
+    etf.category.toLowerCase().includes(usSearchQuery.toLowerCase())
+  );
+
+  const handleAddUsEtf = (ticker: string) => {
+    if (!usList.includes(ticker)) {
+      const updated = usTickers.trim() ? `${usTickers}, ${ticker}` : ticker;
+      setUsTickers(updated);
+      setQuantities(prev => ({ ...prev, [ticker]: 10 }));
+    }
+    setShowUsSearch(false);
+    setUsSearchQuery("");
+  };
+
 
   const [kqTickers, setKqTickers] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({
@@ -160,32 +185,36 @@ export default function PortfolioPage() {
 
       <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
         <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
-          <h3 className="mb-5 flex items-center gap-2 text-sm font-semibold text-amber-400">
-            <Wallet className="h-4 w-4" />
-            보유 수량 입력
-          </h3>
-          <div className="space-y-4">
-            {/* 입력 모드 토글 */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-xs font-medium text-stone-500">
+          {/* 입력 모드 토글 */}
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-400">
+                <Wallet className="h-4 w-4" />
+                보유 수량 입력
+              </h3>
+              <p className="mt-1 text-xs font-medium text-stone-500">
                 {isDirectInput ? "ETF를 입력해주세요" : "종목을 체크하여 추가하세요"}
               </p>
-              <button
-                onClick={() => setIsDirectInput(!isDirectInput)}
-                className="rounded-lg bg-stone-700/50 px-2 py-1 text-xs text-stone-400 hover:bg-stone-600/50 hover:text-stone-300 transition-colors"
-              >
-                {isDirectInput ? "드래그 모드" : "직접 입력"}
-              </button>
             </div>
+            <button
+              onClick={() => setIsDirectInput(!isDirectInput)}
+              className="rounded-lg bg-stone-700/50 px-2 py-1 text-xs text-stone-400 hover:bg-stone-600/50 hover:text-stone-300 transition-colors"
+            >
+              {isDirectInput ? "체크 모드" : "직접 입력"}
+            </button>
+          </div>
+          <div className="space-y-4">
 
             {!isDirectInput && (
             <div className="mb-4 space-y-3">
               
-              {/* 미국 종목 */}
+              {/* 미국 ETF */}
               <div>
-                <p className="mb-1.5 text-xs text-stone-600">미국 ETF</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {US_PRESET_TICKERS.map((ticker) => {
+                <p className="mb-2 text-xs text-stone-600">미국 ETF</p>
+                
+                {/* 모든 미국 ETF 칩들 (프리셋 + 추가된 것들) + 추가 버튼 */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {[...new Set([...US_PRESET_TICKERS, ...usList])].map((ticker) => {
                     const alreadyAdded = usList.includes(ticker);
                     return (
                       <span
@@ -218,10 +247,64 @@ export default function PortfolioPage() {
                       </span>
                     );
                   })}
+                  <button
+                    onClick={() => setShowUsSearch(true)}
+                    className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/30"
+                  >
+                    <Plus className="h-3 w-3" />
+                    추가
+                  </button>
                 </div>
+                
+                {/* 검색 드롭다운 */}
+                {showUsSearch && (
+                  <div className="relative mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Search className="h-4 w-4 text-stone-500" />
+                      <input
+                        type="text"
+                        value={usSearchQuery}
+                        onChange={(e) => setUsSearchQuery(e.target.value)}
+                        placeholder="ETF 검색 (티커, 이름, 카테고리)"
+                        className="flex-1 rounded-lg border border-stone-700/80 bg-stone-900/80 px-3 py-2 text-xs text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          setShowUsSearch(false);
+                          setUsSearchQuery("");
+                        }}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-700/50 text-stone-400 hover:bg-stone-600/50"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
+                      {filteredUsEtfs.slice(0, 20).map((etf) => (
+                        <div
+                          key={etf.ticker}
+                          onClick={() => handleAddUsEtf(etf.ticker)}
+                          className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-mono text-xs font-semibold text-amber-400">{etf.ticker}</span>
+                              <span className="ml-2 text-xs text-stone-300">{etf.name}</span>
+                            </div>
+                            <span className="text-xs text-stone-500">{etf.category}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredUsEtfs.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-stone-500">검색 결과가 없습니다</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 한국 종목 */}
+              {/* 한국 ETF */}
               <div>
                 <p className="mb-1.5 text-xs text-stone-600">한국 ETF</p>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -353,26 +436,7 @@ export default function PortfolioPage() {
                     key={t}
                     className="flex items-center justify-between gap-2"
                   >
-                    <span className="text-xs font-medium text-stone-400">
-                      {isDirectInput 
-                        ? t 
-                        : (t.includes(".KS") ? getKsTickerName(t) : t)
-                      }
-                    </span>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={0}
-                        value={quantities[t] > 0 ? quantities[t] : ""}
-                        placeholder="0"
-                        onChange={(e) =>
-                          handleQuantityChange(
-                            t,
-                            Math.max(0, parseInt(e.target.value) || 0)
-                          )
-                        }
-                        className="w-20 rounded-lg border border-stone-700 bg-stone-900 px-2.5 py-1.5 text-right text-sm tabular-nums text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-                      />
                       <button
                         onClick={() => handleTickerRemove(t)}
                         className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-xs"
@@ -380,7 +444,26 @@ export default function PortfolioPage() {
                       >
                         −
                       </button>
+                      <span className="text-xs font-medium text-stone-400">
+                        {isDirectInput 
+                          ? t 
+                          : (t.includes(".KS") ? getKsTickerName(t) : t)
+                        }
+                      </span>
                     </div>
+                    <input
+                      type="number"
+                      min={0}
+                      value={quantities[t] > 0 ? quantities[t] : ""}
+                      placeholder="0"
+                      onChange={(e) =>
+                        handleQuantityChange(
+                          t,
+                          Math.max(0, parseInt(e.target.value) || 0)
+                        )
+                      }
+                      className="w-20 rounded-lg border border-stone-700 bg-stone-900 px-2.5 py-1.5 text-right text-sm tabular-nums text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                    />
                   </div>
                 ))}
                 </div>
@@ -478,7 +561,7 @@ export default function PortfolioPage() {
                           >
                             <td className="px-5 py-3 font-medium">
                               {e.name === "기타(미분류)" ? (
-                                <span className="text-amber-400">{e.name}</span>
+                                <span className="text-amber-400">기타</span>
                               ) : (
                                 <a
                                   href={`https://finance.yahoo.com/quote/${e.name}`}
@@ -513,55 +596,141 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
-                  <h3 className="mb-4 font-semibold text-stone-200">
-                    비중 시각화
-                  </h3>
-                  <p className="mb-4 text-xs text-stone-500">
-                    종목별 투자액 비율
-                  </p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-stone-200">분석 차트</h3>
+                      <p className="mt-1 text-xs text-stone-500">종목별 투자액 비율</p>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-lg bg-stone-800/50 p-1">
+                      {[
+                        { key: "pie", label: "파이" },
+                        { key: "donut", label: "도넛" },
+                        { key: "bar", label: "막대" }
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setChartType(key as "pie" | "donut" | "bar")}
+                          className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+                            chartType === key
+                              ? "bg-amber-500/20 text-amber-400"
+                              : "text-stone-400 hover:text-stone-300"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={result.exposures}
-                          dataKey="amount_usd"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={2}
-                        >
-                          {result.exposures.map((_, i) => (
-                            <Cell
-                              key={i}
-                              fill={CHART_COLORS[i % CHART_COLORS.length]}
-                              stroke="none"
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(v, name, props) =>
-                            props?.payload?.weight_pct != null
-                              ? `${props.payload.weight_pct.toFixed(1)}%`
-                              : ""
-                          }
-                          contentStyle={{
-                            backgroundColor: "rgba(28,25,23,0.95)",
-                            border: "1px solid rgba(245,158,11,0.3)",
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
-                            padding: "10px 14px",
-                          }}
-                          itemStyle={{ color: "#fbbf24" }}
-                          labelStyle={{
-                            color: "#fafaf9",
-                            fontWeight: 600,
-                            marginBottom: "4px",
-                          }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: "12px" }} />
-                      </PieChart>
+                      {chartType === "bar" ? (
+                        <BarChart data={result.exposures.filter(e => e.name !== "기타(미분류)").map(e => ({
+                          ...e,
+                          name: e.name === "기타(미분류)" ? "기타" : e.name
+                        }))}>
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 9, fill: "#a8a29e" }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={110}
+                            interval={0}
+                            tickMargin={5}
+                          />
+                          <YAxis 
+                            tick={{ fontSize: 10, fill: "#a8a29e" }}
+                            tickFormatter={(value) => `${value.toFixed(1)}%`}
+                          />
+                          <Tooltip
+                            formatter={(v, name, props) =>
+                              props?.payload?.weight_pct != null
+                                ? `${props.payload.weight_pct.toFixed(1)}%`
+                                : ""
+                            }
+                            contentStyle={{
+                              backgroundColor: "rgba(28,25,23,0.95)",
+                              border: "1px solid rgba(245,158,11,0.3)",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                              padding: "10px 14px",
+                            }}
+                            itemStyle={{ color: "#fbbf24" }}
+                            labelStyle={{
+                              color: "#fafaf9",
+                              fontWeight: 600,
+                              marginBottom: "4px",
+                            }}
+                          />
+                          <Bar dataKey="weight_pct" fill="#f59e0b" />
+                        </BarChart>
+                      ) : (
+                        <PieChart>
+                          <Pie
+                            data={result.exposures.map(e => ({
+                              ...e,
+                              name: e.name === "기타(미분류)" ? "기타" : e.name
+                            }))}
+                            dataKey="amount_usd"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={chartType === "donut" ? 50 : 0}
+                            outerRadius={100}
+                            paddingAngle={2}
+                          >
+                            {result.exposures.map((_, i) => (
+                              <Cell
+                                key={i}
+                                fill={CHART_COLORS[i % CHART_COLORS.length]}
+                                stroke="none"
+                              />
+                            ))}
+                          </Pie>
+                          {chartType === "donut" && (
+                            <>
+                              <Pie
+                                data={[{ value: 1 }]}
+                                dataKey="value"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={50}
+                                fill="rgba(68,64,60,0.3)"
+                                stroke="none"
+                                isAnimationActive={false}
+                                legendType="none"
+                                tooltipType="none"
+                              />
+                              <text x="50%" y="43%" textAnchor="middle" dominantBaseline="middle" fill="#fbbf24" fontSize={16} fontWeight={600}>
+                                ${Math.round(result.total_invested_usd).toLocaleString("en-US")}
+                              </text>
+                              <text x="50%" y="49%" textAnchor="middle" dominantBaseline="middle" fill="#a8a29e" fontSize={11}>
+                                총 투자액
+                              </text>
+                            </>
+                          )}
+                          <Tooltip
+                            formatter={(v, name, props) =>
+                              props?.payload?.weight_pct != null
+                                ? `${props.payload.weight_pct.toFixed(1)}%`
+                                : ""
+                            }
+                            contentStyle={{
+                              backgroundColor: "rgba(28,25,23,0.95)",
+                              border: "1px solid rgba(245,158,11,0.3)",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                              padding: "10px 14px",
+                            }}
+                            itemStyle={{ color: "#fbbf24" }}
+                            labelStyle={{
+                              color: "#fafaf9",
+                              fontWeight: 600,
+                              marginBottom: "4px",
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: "12px" }} />
+                        </PieChart>
+                      )}
                     </ResponsiveContainer>
                   </div>
                 </div>
