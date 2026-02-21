@@ -74,11 +74,13 @@ export interface IndexData {
   current_price: number;
   change: number;
   change_percent: number;
-  market_state: "REGULAR" | "PRE" | "POST" | "CLOSED" | string;
+  market_state: "REGULAR" | "PRE" | "POST" | "CLOSED" | "PREPRE" | "POSTPOST" | string;
+  cached_at?: string;
 }
 
 export interface IndicesResponse {
   indices: IndexData[];
+  cached_at?: string;
 }
 
 export async function getIndices(): Promise<IndicesResponse> {
