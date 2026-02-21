@@ -778,6 +778,7 @@ export default function PortfolioPage() {
                               tickFormatter={(value) => `${value.toFixed(1)}%`}
                             />
                             <Tooltip
+                              cursor={false}
                               formatter={(v, name, props) =>
                                 props?.payload?.weight_pct != null
                                   ? `${props.payload.weight_pct.toFixed(1)}%`
