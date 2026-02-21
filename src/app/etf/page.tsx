@@ -15,6 +15,8 @@ export default function ETFDetailPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof getETFDetail>> | null>(null);
+  const [showRemainingTooltip, setShowRemainingTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   const handleSearch = async () => {
     if (!ticker.trim()) return;
@@ -169,48 +171,91 @@ export default function ETFDetailPage() {
               <p className="mb-4 text-xs text-stone-500">구성 종목별 비중 분포</p>
               <div className="h-[360px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={data.holdings}
-                      dataKey="weight_pct"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={110}
-                      paddingAngle={2}
-                    >
-                      {data.holdings.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v) => (v != null ? `${Number(v).toFixed(2)}%` : "")}
-                      contentStyle={{
-                        backgroundColor: "rgba(28,25,23,0.95)",
-                        border: "1px solid rgba(245,158,11,0.3)",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
-                        padding: "10px 14px",
-                      }}
-                      itemStyle={{ color: "#fbbf24" }}
-                      labelStyle={{
-                        color: "#fafaf9",
-                        fontWeight: 600,
-                        marginBottom: "4px",
-                      }}
-                    />
-                    <Legend 
-                      wrapperStyle={{ fontSize: "12px" }}
-                      formatter={(value) => (
-                        <span style={{ color: "#fafaf9" }}>{value}</span>
-                      )}
-                    />
-                  </PieChart>
+                  <>
+                    <PieChart>
+                      <Pie
+                        data={data.holdings.slice(0, 15)}
+                        dataKey="weight_pct"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={110}
+                        paddingAngle={2}
+                      >
+                        {data.holdings.slice(0, 15).map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(v) => (v != null ? `${Number(v).toFixed(2)}%` : "")}
+                        contentStyle={{
+                          backgroundColor: "rgba(28,25,23,0.95)",
+                          border: "1px solid rgba(245,158,11,0.3)",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 20px rgba(245,158,11,0.15)",
+                          padding: "10px 14px",
+                        }}
+                        itemStyle={{ color: "#fbbf24" }}
+                        labelStyle={{
+                          color: "#fafaf9",
+                          fontWeight: 600,
+                          marginBottom: "4px",
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ fontSize: "12px" }}
+                        formatter={(value, entry, index) => {
+                          const isLastDisplayed = index === Math.min(15, data.holdings.length) - 1;
+                          const remainingCount = data.holdings.length - 15;
+                          
+                          return (
+                            <span style={{ color: "#fafaf9" }}>
+                              {value}
+                              {isLastDisplayed && remainingCount > 0 && (
+                                <span 
+                                  style={{ color: "#a8a29e", marginLeft: "8px", cursor: "pointer" }}
+                                  onMouseEnter={(e) => {
+                                    setShowRemainingTooltip(true);
+                                    setTooltipPosition({ x: e.clientX, y: e.clientY });
+                                  }}
+                                  onMouseLeave={() => setShowRemainingTooltip(false)}
+                                >
+                                  +{remainingCount}개
+                                </span>
+                              )}
+                            </span>
+                          );
+                        }}
+                      />
+                    </PieChart>
+                  </>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
+
+          {/* 커스텀 툴팁 */}
+          {showRemainingTooltip && data && (
+            <div 
+              className="fixed z-50 max-w-xs rounded-lg border border-stone-700 bg-stone-900 p-3 text-xs text-stone-300 shadow-lg"
+              style={{
+                left: tooltipPosition.x + 10,
+                top: tooltipPosition.y - 10,
+                transform: 'translateY(-100%)'
+              }}
+            >
+              <div className="font-medium text-amber-400 mb-2">더 보기:</div>
+              <div className="space-y-1">
+                {data.holdings.slice(15).map((h, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span>{h.name}</span>
+                    <span className="text-amber-400">{h.weight_pct.toFixed(2)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {data.summary && (
             <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
