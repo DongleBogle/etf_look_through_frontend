@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { getIndices, IndicesResponse, IndexData } from "@/lib/api";
-import { Activity, RefreshCw } from "lucide-react";
+import { Activity, Clock } from "lucide-react";
+
+const MARKET_STATUS: Record<string, string> = {
+    REGULAR: "정규장",
+    PRE: "프리마켓",
+    POST: "애프터마켓",
+    POSTPOST: "장마감",
+    CLOSED: "휴장일",
+    PREPRE: "장마감",
+};
 
 export default function MarketPage() {
     const [data, setData] = useState<IndicesResponse | null>(null);
@@ -49,21 +58,6 @@ export default function MarketPage() {
         }).format(num);
     };
 
-    const getMarketStatusLabel = (status: string) => {
-        switch (status) {
-            case "REGULAR":
-                return "정규장";
-            case "PRE":
-                return "프리장";
-            case "POST":
-                return "애프터마켓";
-            case "CLOSED":
-                return "장마감";
-            default:
-                return status;
-        }
-    };
-
     const renderCard = (item: { key: string; flag: string }) => {
         const info = data?.indices.find((i) => i.name === item.key);
         if (!info) return null;
@@ -99,7 +93,7 @@ export default function MarketPage() {
                         {info.market_state === "REGULAR" && (
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
                         )}
-                        {getMarketStatusLabel(info.market_state)}
+                        {MARKET_STATUS[info.market_state] || info.market_state}
                     </span>
                 </div>
 
@@ -134,14 +128,12 @@ export default function MarketPage() {
                         주요 국가의 현재 시장 지수를 실시간으로 확인하세요
                     </p>
                 </div>
-                <button
-                    onClick={fetchData}
-                    disabled={loading}
-                    className="flex items-center gap-2 rounded-xl bg-stone-800/50 px-4 py-2 text-sm font-medium text-stone-300 hover:bg-stone-800 hover:text-stone-100 transition-colors disabled:opacity-50"
-                >
-                    <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-                    새로고침
-                </button>
+                {(data?.cached_at ?? data?.indices?.[0]?.cached_at) && (
+                    <div className="flex items-center gap-2 text-sm text-stone-500">
+                        <Clock className="h-4 w-4" />
+                        <span>업데이트: {data?.cached_at ?? data?.indices?.[0]?.cached_at}</span>
+                    </div>
+                )}
             </div>
 
             {error ? (
