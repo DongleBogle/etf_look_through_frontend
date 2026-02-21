@@ -45,14 +45,8 @@ const US_PRESET_TICKERS = [
   "VWO", "VUG", "VXUS", "VTV", "SOXX", "QLD", "SSO", "SCHD", "USD",
 ];
 
-const CustomXAxisTick = ({ x, y, payload, remainingStocks, onHover, onLeave }: {
-  x?: number;
-  y?: number;
-  payload?: { value: string };
-  remainingStocks?: Array<{ name: string; weight_pct: number }>;
-  onHover?: (e: React.MouseEvent) => void;
-  onLeave?: () => void;
-}) => {
+const CustomXAxisTick = (props: any) => {
+  const { x, y, payload, remainingStocks, onHover, onLeave } = props;
   const isLastTick = remainingStocks && remainingStocks.length > 0;
   
   return (
@@ -759,7 +753,7 @@ export default function PortfolioPage() {
                                   <CustomXAxisTick
                                     {...props}
                                     remainingStocks={isLastTick ? filteredData.slice(15) : undefined}
-                                    onHover={(e) => {
+                                    onHover={(e: React.MouseEvent) => {
                                       setShowRemainingTooltip(true);
                                       setTooltipPosition({ x: e.clientX, y: e.clientY });
                                     }}
