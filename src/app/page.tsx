@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { BarChart3, TrendingUp, Wallet, Sparkles, Search, Plus, X, Trash2 } from "lucide-react";
 import { analyzePortfolio } from "@/lib/api";
+import { getKsEtfs, type KsEtfItem } from "@/lib/api-ks-etfs";
 import { US_ETFS } from "@/lib/etf-data";
 
 const CHART_COLORS = [
@@ -69,16 +70,7 @@ const CustomXAxisTick = (props: any) => {
   );
 };
 
-const KS_PRESET_TICKERS = [
-  { ticker: "069500", name: "KODEX 200" },
-  { ticker: "102110", name: "TIGER 200" },
-  { ticker: "114800", name: "KODEX 인버스" },
-  { ticker: "251340", name: "KODEX 코스닥150" },
-  { ticker: "133690", name: "TIGER 코스닥150" },
-  { ticker: "069660", name: "KOSEF 코스피200" },
-  { ticker: "226490", name: "KODEX 코스피" },
-  { ticker: "068270", name: "KODEX 200선물" },
-];
+const KS_DISPLAY_PER_CATEGORY = 4;
 
 export default function PortfolioPage() {
   const [usTickers, setUsTickers] = useState("SPY, QQQ");
@@ -91,12 +83,32 @@ export default function PortfolioPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemainingTooltip, setShowRemainingTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  
+  const [ksEtfList, setKsEtfList] = useState<KsEtfItem[]>([]);
+  const [showKsSearch, setShowKsSearch] = useState(false);
+  const [ksSearchQuery, setKsSearchQuery] = useState("");
+
+  useEffect(() => {
+    getKsEtfs().then(setKsEtfList).catch(() => {});
+  }, []);
+
   const getKsTickerName = (ticker: string) => {
     const cleanTicker = ticker.replace(/\.(KS|KQ)$/, "");
-    const found = KS_PRESET_TICKERS.find(item => item.ticker === cleanTicker);
+    const found = ksEtfList.find(item => item.ticker === cleanTicker);
     return found ? found.name : ticker;
   };
+
+  const ksTab1 = ksEtfList.filter((item) => item.etfTabCode === 1);
+  const ksTab4 = ksEtfList.filter((item) => item.etfTabCode === 4);
+  const ksDisplayTab1 = ksTab1.slice(0, KS_DISPLAY_PER_CATEGORY);
+  const ksDisplayTab4 = ksTab4.slice(0, KS_DISPLAY_PER_CATEGORY);
+  const ksRemainingTab1 = ksTab1.slice(KS_DISPLAY_PER_CATEGORY);
+  const ksRemainingTab4 = ksTab4.slice(KS_DISPLAY_PER_CATEGORY);
+  const ksAllRemaining = [...ksRemainingTab1, ...ksRemainingTab4];
+  const filteredKsRemaining = ksAllRemaining.filter(
+    (item) =>
+      item.name.toLowerCase().includes(ksSearchQuery.toLowerCase()) ||
+      item.ticker.includes(ksSearchQuery)
+  );
 
   const filteredUsEtfs = US_ETFS.filter(etf => 
     etf.ticker.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
@@ -113,6 +125,22 @@ export default function PortfolioPage() {
     }
     setShowUsSearch(false);
     setUsSearchQuery("");
+  };
+
+  const handleAddKsEtf = (item: KsEtfItem) => {
+    if (!ksList.includes(item.ticker)) {
+      const updatedTickers = ksTickers.trim()
+        ? `${ksTickers}, ${item.ticker}`
+        : item.ticker;
+      const updatedDisplay = ksTickersDisplay.trim()
+        ? `${ksTickersDisplay}, ${item.name}`
+        : item.name;
+      setKsTickers(updatedTickers);
+      setKsTickersDisplay(updatedDisplay);
+      setQuantities((prev) => ({ ...prev, [item.ticker + ".KS"]: 10 }));
+    }
+    setShowKsSearch(false);
+    setKsSearchQuery("");
   };
 
 
@@ -336,9 +364,9 @@ export default function PortfolioPage() {
 
               {/* 한국 ETF */}
               <div>
-                <p className="mb-1.5 text-xs text-stone-600">한국 ETF</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {KS_PRESET_TICKERS.map((item) => {
+                <p className="mb-2 text-xs text-stone-600">한국 ETF</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {[...ksDisplayTab1, ...ksDisplayTab4].map((item) => {
                     const alreadyAdded = ksList.includes(item.ticker);
                     return (
                       <span
@@ -355,15 +383,7 @@ export default function PortfolioPage() {
                               return newQuantities;
                             });
                           } else {
-                            const updatedTickers = ksTickers.trim()
-                              ? `${ksTickers}, ${item.ticker}`
-                              : item.ticker;
-                            const updatedDisplay = ksTickersDisplay.trim()
-                              ? `${ksTickersDisplay}, ${item.name}`
-                              : item.name;
-                            setKsTickers(updatedTickers);
-                            setKsTickersDisplay(updatedDisplay);
-                            setQuantities((prev) => ({ ...prev, [item.ticker + ".KS"]: 10 }));
+                            handleAddKsEtf(item);
                           }
                         }}
                         className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
@@ -377,7 +397,55 @@ export default function PortfolioPage() {
                       </span>
                     );
                   })}
+                  <button
+                    onClick={() => setShowKsSearch(true)}
+                    className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-colors border border-amber-500/30"
+                  >
+                    <Plus className="h-3 w-3" />
+                    추가
+                  </button>
                 </div>
+                {showKsSearch && (
+                  <div className="relative mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Search className="h-4 w-4 text-stone-500" />
+                      <input
+                        type="text"
+                        value={ksSearchQuery}
+                        onChange={(e) => setKsSearchQuery(e.target.value)}
+                        placeholder="ETF 검색 (티커, 이름)"
+                        className="flex-1 rounded-lg border border-stone-700/80 bg-stone-900/80 px-3 py-2 text-xs text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          setShowKsSearch(false);
+                          setKsSearchQuery("");
+                        }}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-700/50 text-stone-400 hover:bg-stone-600/50"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
+                      {filteredKsRemaining.slice(0, 20).map((item) => (
+                        <div
+                          key={item.ticker}
+                          onClick={() => handleAddKsEtf(item)}
+                          className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
+                        >
+                          <div>
+                            <span className="font-mono text-xs font-semibold text-amber-400">{item.ticker}</span>
+                            <span className="ml-2 text-xs text-stone-300">{item.name}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredKsRemaining.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-stone-500">검색 결과가 없습니다</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             )}
