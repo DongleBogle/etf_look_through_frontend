@@ -13,7 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BarChart3, TrendingUp, Wallet, Sparkles, Search, Plus, X } from "lucide-react";
+import { BarChart3, TrendingUp, Wallet, Sparkles, Search, Plus, X, Trash2 } from "lucide-react";
 import { analyzePortfolio } from "@/lib/api";
 import { US_ETFS } from "@/lib/etf-data";
 
@@ -63,7 +63,8 @@ export default function PortfolioPage() {
   const [isDirectInput, setIsDirectInput] = useState(false);
   const [showUsSearch, setShowUsSearch] = useState(false);
   const [usSearchQuery, setUsSearchQuery] = useState("");
-  const [chartType, setChartType] = useState<"pie" | "donut" | "bar">("pie");
+  const [chartType, setChartType] = useState<"donut" | "bar">("donut");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const getKsTickerName = (ticker: string) => {
     const cleanTicker = ticker.replace(/\.(KS|KQ)$/, "");
@@ -79,7 +80,8 @@ export default function PortfolioPage() {
 
   const handleAddUsEtf = (ticker: string) => {
     if (!usList.includes(ticker)) {
-      const updated = usTickers.trim() ? `${usTickers}, ${ticker}` : ticker;
+      const currentList = usList.filter(Boolean);
+      const updated = [...currentList, ticker].join(", ");
       setUsTickers(updated);
       setQuantities(prev => ({ ...prev, [ticker]: 10 }));
     }
@@ -212,9 +214,14 @@ export default function PortfolioPage() {
               <div>
                 <p className="mb-2 text-xs text-stone-600">미국 ETF</p>
                 
-                {/* 모든 미국 ETF 칩들 (프리셋 + 추가된 것들) + 추가 버튼 */}
+                {/* 모든 미국 ETF 칩들 (체크된 것들 먼저, 그 다음 체크 안된 것들) + 추가 버튼 */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {[...new Set([...US_PRESET_TICKERS, ...usList])].map((ticker) => {
+                  {(() => {
+                    const allTickers = [...new Set([...US_PRESET_TICKERS, ...usList])];
+                    const checkedTickers = allTickers.filter(ticker => usList.includes(ticker));
+                    const uncheckedTickers = allTickers.filter(ticker => !usList.includes(ticker));
+                    return [...checkedTickers, ...uncheckedTickers];
+                  })().map((ticker) => {
                     const alreadyAdded = usList.includes(ticker);
                     return (
                       <span
@@ -287,12 +294,9 @@ export default function PortfolioPage() {
                           onClick={() => handleAddUsEtf(etf.ticker)}
                           className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="font-mono text-xs font-semibold text-amber-400">{etf.ticker}</span>
-                              <span className="ml-2 text-xs text-stone-300">{etf.name}</span>
-                            </div>
-                            <span className="text-xs text-stone-500">{etf.category}</span>
+                          <div>
+                            <span className="font-mono text-xs font-semibold text-amber-400">{etf.ticker}</span>
+                            <span className="ml-2 text-xs text-stone-300">{etf.name}</span>
                           </div>
                         </div>
                       ))}
@@ -426,9 +430,20 @@ export default function PortfolioPage() {
                   }
                 }}
               >
-                <p className="text-xs font-medium text-stone-500">
-                  종목별 수량
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-stone-500">
+                    종목별 수량
+                  </p>
+                  {allTickers.length > 0 && (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      전체 삭제
+                    </button>
+                  )}
+                </div>
                 
                 <div className="space-y-2">
                 {allTickers.map((t) => (
@@ -469,6 +484,45 @@ export default function PortfolioPage() {
                 </div>
               </div>
             )}
+            
+            {/* 삭제 확인 팝업 */}
+            {showDeleteConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="mx-4 w-full max-w-sm rounded-2xl border border-stone-800 bg-stone-900 p-6 shadow-xl">
+                  <div className="mb-4 text-center">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
+                      <Trash2 className="h-6 w-6 text-red-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-stone-200">전체 삭제</h3>
+                    <p className="mt-2 text-sm text-stone-400">
+                      모든 종목을 삭제하시겠습니까?
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 rounded-lg border border-stone-600 bg-stone-700/50 px-4 py-2.5 text-sm font-medium text-stone-300 hover:bg-stone-600/50 transition-colors"
+                    >
+                      아니요
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUsTickers("");
+                        setKsTickers("");
+                        setKsTickersDisplay("");
+                        setKqTickers("");
+                        setQuantities({});
+                        setShowDeleteConfirm(false);
+                      }}
+                      className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-500 transition-colors"
+                    >
+                      예
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <button
               onClick={handleAnalyze}
               disabled={loading || totalQty === 0}
@@ -603,13 +657,12 @@ export default function PortfolioPage() {
                     </div>
                     <div className="flex items-center gap-1 rounded-lg bg-stone-800/50 p-1">
                       {[
-                        { key: "pie", label: "파이" },
                         { key: "donut", label: "도넛" },
                         { key: "bar", label: "막대" }
                       ].map(({ key, label }) => (
                         <button
                           key={key}
-                          onClick={() => setChartType(key as "pie" | "donut" | "bar")}
+                          onClick={() => setChartType(key as "donut" | "bar")}
                           className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
                             chartType === key
                               ? "bg-amber-500/20 text-amber-400"
@@ -674,7 +727,7 @@ export default function PortfolioPage() {
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            innerRadius={chartType === "donut" ? 50 : 0}
+                            innerRadius={50}
                             outerRadius={100}
                             paddingAngle={2}
                           >
