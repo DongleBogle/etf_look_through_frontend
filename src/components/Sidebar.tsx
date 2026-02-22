@@ -7,22 +7,13 @@ import {
   BarChart3,
   Search,
   TrendingUp,
-  DollarSign,
   Menu,
   X,
 } from "lucide-react";
-import { getExchangeRate } from "@/lib/api";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    getExchangeRate()
-      .then((r) => setExchangeRate(r.rate))
-      .catch(() => setExchangeRate(null));
-  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -75,19 +66,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {exchangeRate != null && (
-        <div className="mt-4 rounded-xl border border-stone-800/60 bg-stone-900/50 px-4 py-3">
-          <div className="flex items-center gap-2 text-xs text-stone-500">
-            <DollarSign className="h-3.5 w-3.5" />
-            실시간 환율
-          </div>
-          <p className="mt-1 text-sm font-semibold tabular-nums text-stone-200">
-            1$ ={" "}
-            {exchangeRate.toLocaleString("ko-KR", { minimumFractionDigits: 2 })}
-            ₩
-          </p>
-        </div>
-      )}
     </div>
   );
 

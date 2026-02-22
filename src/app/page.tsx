@@ -349,7 +349,7 @@ export default function PortfolioPage() {
                           type="text"
                           value={usSearchQuery}
                           onChange={(e) => setUsSearchQuery(e.target.value)}
-                          placeholder="ETF 검색 (티커, 이름)"
+                          placeholder="ETF 검색 (티커, 종목명)"
                           className="flex-1 rounded-lg border border-stone-700/80 bg-stone-900/80 px-3 py-2 text-xs text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
                           autoFocus
                         />
@@ -365,18 +365,37 @@ export default function PortfolioPage() {
                       </div>
 
                       <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
-                        {filteredUsEtfs.slice(0, 20).map((etf) => (
-                          <div
-                            key={etf.Symbol}
-                            onClick={() => handleAddUsEtf(etf.Symbol)}
-                            className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
-                          >
-                            <div>
-                              <span className="font-mono text-xs font-semibold text-amber-400">{etf.Symbol}</span>
-                              <span className="ml-2 text-xs text-stone-300">{etf.Name}</span>
+                        {filteredUsEtfs.slice(0, 20).map((etf) => {
+                          const highlightName = (name: string, query: string) => {
+                            if (!query || etf.Symbol.toLowerCase().includes(query.toLowerCase())) {
+                              return name;
+                            }
+                            
+                            const regex = new RegExp(`(${query})`, 'gi');
+                            const parts = name.split(regex);
+                            
+                            return parts.map((part, index) => 
+                              regex.test(part) ? (
+                                <span key={index} className="text-blue-400">{part}</span>
+                              ) : part
+                            );
+                          };
+                          
+                          return (
+                            <div
+                              key={etf.Symbol}
+                              onClick={() => handleAddUsEtf(etf.Symbol)}
+                              className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
+                            >
+                              <div>
+                                <span className="font-mono text-xs font-semibold text-amber-400">{etf.Symbol}</span>
+                                <span className="ml-2 text-xs text-stone-300">
+                                  {highlightName(etf.Name, usSearchQuery)}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                         {filteredUsEtfs.length === 0 && (
                           <div className="px-3 py-2 text-xs text-stone-500">검색 결과가 없습니다</div>
                         )}
@@ -433,7 +452,7 @@ export default function PortfolioPage() {
                           type="text"
                           value={ksSearchQuery}
                           onChange={(e) => setKsSearchQuery(e.target.value)}
-                          placeholder="ETF 검색 (티커, 이름)"
+                          placeholder="ETF 검색 (티커, 종목명)"
                           className="flex-1 rounded-lg border border-stone-700/80 bg-stone-900/80 px-3 py-2 text-xs text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
                           autoFocus
                         />
@@ -448,18 +467,37 @@ export default function PortfolioPage() {
                         </button>
                       </div>
                       <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
-                        {filteredKsRemaining.slice(0, 20).map((item) => (
-                          <div
-                            key={item.ticker}
-                            onClick={() => handleAddKsEtf(item)}
-                            className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
-                          >
-                            <div>
-                              <span className="font-mono text-xs font-semibold text-amber-400">{item.ticker}</span>
-                              <span className="ml-2 text-xs text-stone-300">{item.name}</span>
+                        {filteredKsRemaining.slice(0, 20).map((item) => {
+                          const highlightName = (name: string, query: string) => {
+                            if (!query || item.ticker.includes(query)) {
+                              return name;
+                            }
+                            
+                            const regex = new RegExp(`(${query})`, 'gi');
+                            const parts = name.split(regex);
+                            
+                            return parts.map((part, index) => 
+                              regex.test(part) ? (
+                                <span key={index} className="text-blue-400">{part}</span>
+                              ) : part
+                            );
+                          };
+                          
+                          return (
+                            <div
+                              key={item.ticker}
+                              onClick={() => handleAddKsEtf(item)}
+                              className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
+                            >
+                              <div>
+                                <span className="font-mono text-xs font-semibold text-amber-400">{item.ticker}</span>
+                                <span className="ml-2 text-xs text-stone-300">
+                                  {highlightName(item.name, ksSearchQuery)}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                         {filteredKsRemaining.length === 0 && (
                           <div className="px-3 py-2 text-xs text-stone-500">검색 결과가 없습니다</div>
                         )}
@@ -666,7 +704,7 @@ export default function PortfolioPage() {
 
           {result && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
                   <p className="text-xs font-medium text-stone-500">
                     총 투자액 (₩)
@@ -685,6 +723,16 @@ export default function PortfolioPage() {
                   <p className="mt-1 text-2xl font-bold tabular-nums text-amber-400">
                     $
                     {result.total_invested_usd.toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
+                  <p className="text-xs font-medium text-stone-500">
+                    실시간 환율 (USD/KRW)
+                  </p>
+                  <p className="mt-1 text-2xl font-bold tabular-nums text-amber-400">
+                    {result.exchange_rate.toLocaleString("ko-KR", {
                       maximumFractionDigits: 2,
                     })}
                   </p>
@@ -753,7 +801,7 @@ export default function PortfolioPage() {
                               ₩
                             </td>
                             <td className="px-5 py-3 text-right font-semibold tabular-nums text-amber-400">
-                              {e.weight_pct.toFixed(1)}%
+                              {e.weight_pct.toFixed(2)}%
                             </td>
                           </tr>
                         ))}
@@ -777,7 +825,7 @@ export default function PortfolioPage() {
                       {result.exposures.filter(e => e.name !== "기타(미분류)").slice(15).map((e, i) => (
                         <div key={i} className="flex justify-between">
                           <span>{e.name}</span>
-                          <span className="text-amber-400">{e.weight_pct.toFixed(1)}%</span>
+                          <span className="text-amber-400">{e.weight_pct.toFixed(2)}%</span>
                         </div>
                       ))}
                     </div>
@@ -861,7 +909,7 @@ export default function PortfolioPage() {
                               cursor={false}
                               formatter={(v, name, props) =>
                                 props?.payload?.weight_pct != null
-                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  ? `${props.payload.weight_pct.toFixed(2)}%`
                                   : ""
                               }
                               contentStyle={{
@@ -938,7 +986,7 @@ export default function PortfolioPage() {
                             <Tooltip
                               formatter={(v, name, props) =>
                                 props?.payload?.weight_pct != null
-                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  ? `${props.payload.weight_pct.toFixed(2)}%`
                                   : ""
                               }
                               contentStyle={{
