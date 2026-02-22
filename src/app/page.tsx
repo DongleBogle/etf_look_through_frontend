@@ -791,7 +791,7 @@ export default function PortfolioPage() {
                               ₩
                             </td>
                             <td className="px-5 py-3 text-right font-semibold tabular-nums text-amber-400">
-                              {e.weight_pct.toFixed(1)}%
+                              {e.weight_pct.toFixed(2)}%
                             </td>
                           </tr>
                         ))}
@@ -815,7 +815,7 @@ export default function PortfolioPage() {
                       {result.exposures.filter(e => e.name !== "기타(미분류)").slice(15).map((e, i) => (
                         <div key={i} className="flex justify-between">
                           <span>{e.name}</span>
-                          <span className="text-amber-400">{e.weight_pct.toFixed(1)}%</span>
+                          <span className="text-amber-400">{e.weight_pct.toFixed(2)}%</span>
                         </div>
                       ))}
                     </div>
@@ -899,7 +899,7 @@ export default function PortfolioPage() {
                               cursor={false}
                               formatter={(v, name, props) =>
                                 props?.payload?.weight_pct != null
-                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  ? `${props.payload.weight_pct.toFixed(2)}%`
                                   : ""
                               }
                               contentStyle={{
@@ -976,7 +976,7 @@ export default function PortfolioPage() {
                             <Tooltip
                               formatter={(v, name, props) =>
                                 props?.payload?.weight_pct != null
-                                  ? `${props.payload.weight_pct.toFixed(1)}%`
+                                  ? `${props.payload.weight_pct.toFixed(2)}%`
                                   : ""
                               }
                               contentStyle={{
