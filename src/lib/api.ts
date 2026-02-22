@@ -88,3 +88,14 @@ export async function getIndices(): Promise<IndicesResponse> {
   if (!res.ok) throw new Error("지수 조회 실패");
   return res.json();
 }
+
+export interface USEtfItem {
+  Symbol: string;
+  Name: string;
+}
+
+export async function getUsEtfs(): Promise<USEtfItem[]> {
+  const res = await fetch(`${API_BASE}/api/etf-list?market=ETF/US`);
+  if (!res.ok) throw new Error("미국 ETF 목록 조회 실패");
+  return res.json();
+}

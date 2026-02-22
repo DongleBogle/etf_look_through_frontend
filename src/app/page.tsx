@@ -14,9 +14,8 @@ import {
   YAxis,
 } from "recharts";
 import { BarChart3, TrendingUp, Wallet, Sparkles, Search, Plus, X, Trash2 } from "lucide-react";
-import { analyzePortfolio } from "@/lib/api";
+import { analyzePortfolio, getUsEtfs, type USEtfItem } from "@/lib/api";
 import { getKsEtfs, type KsEtfItem } from "@/lib/api-ks-etfs";
-import { US_ETFS } from "@/lib/etf-data";
 
 const CHART_COLORS = [
   "#f59e0b",
@@ -129,9 +128,11 @@ export default function PortfolioPage() {
   const [ksEtfList, setKsEtfList] = useState<KsEtfItem[]>([]);
   const [showKsSearch, setShowKsSearch] = useState(false);
   const [ksSearchQuery, setKsSearchQuery] = useState("");
+  const [usEtfList, setUsEtfList] = useState<USEtfItem[]>([]);
 
   useEffect(() => {
     getKsEtfs().then(setKsEtfList).catch(() => { });
+    getUsEtfs().then(setUsEtfList).catch(() => { });
   }, []);
 
   const getKsTickerName = (ticker: string) => {
@@ -153,10 +154,9 @@ export default function PortfolioPage() {
       item.ticker.includes(ksSearchQuery)
   );
 
-  const filteredUsEtfs = US_ETFS.filter(etf =>
-    etf.ticker.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
-    etf.name.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
-    etf.category.toLowerCase().includes(usSearchQuery.toLowerCase())
+  const filteredUsEtfs = usEtfList.filter(etf =>
+    etf.Symbol.toLowerCase().includes(usSearchQuery.toLowerCase()) ||
+    etf.Name.toLowerCase().includes(usSearchQuery.toLowerCase())
   );
 
   const handleAddUsEtf = (ticker: string) => {
@@ -349,7 +349,7 @@ export default function PortfolioPage() {
                           type="text"
                           value={usSearchQuery}
                           onChange={(e) => setUsSearchQuery(e.target.value)}
-                          placeholder="ETF 검색 (티커, 이름, 카테고리)"
+                          placeholder="ETF 검색 (티커, 이름)"
                           className="flex-1 rounded-lg border border-stone-700/80 bg-stone-900/80 px-3 py-2 text-xs text-stone-200 placeholder:text-stone-600 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
                           autoFocus
                         />
@@ -367,13 +367,13 @@ export default function PortfolioPage() {
                       <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
                         {filteredUsEtfs.slice(0, 20).map((etf) => (
                           <div
-                            key={etf.ticker}
-                            onClick={() => handleAddUsEtf(etf.ticker)}
+                            key={etf.Symbol}
+                            onClick={() => handleAddUsEtf(etf.Symbol)}
                             className="cursor-pointer border-b border-stone-800/50 px-3 py-2 hover:bg-stone-800/50 last:border-b-0"
                           >
                             <div>
-                              <span className="font-mono text-xs font-semibold text-amber-400">{etf.ticker}</span>
-                              <span className="ml-2 text-xs text-stone-300">{etf.name}</span>
+                              <span className="font-mono text-xs font-semibold text-amber-400">{etf.Symbol}</span>
+                              <span className="ml-2 text-xs text-stone-300">{etf.Name}</span>
                             </div>
                           </div>
                         ))}
