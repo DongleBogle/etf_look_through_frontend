@@ -704,7 +704,7 @@ export default function PortfolioPage() {
 
           {result && (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
                   <p className="text-xs font-medium text-stone-500">
                     총 투자액 (₩)
@@ -723,6 +723,16 @@ export default function PortfolioPage() {
                   <p className="mt-1 text-2xl font-bold tabular-nums text-amber-400">
                     $
                     {result.total_invested_usd.toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm card-glow">
+                  <p className="text-xs font-medium text-stone-500">
+                    실시간 환율 (USD/KRW)
+                  </p>
+                  <p className="mt-1 text-2xl font-bold tabular-nums text-amber-400">
+                    {result.exchange_rate.toLocaleString("ko-KR", {
                       maximumFractionDigits: 2,
                     })}
                   </p>
