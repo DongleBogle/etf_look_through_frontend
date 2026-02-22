@@ -367,7 +367,7 @@ export default function PortfolioPage() {
                       <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
                         {filteredUsEtfs.slice(0, 20).map((etf) => {
                           const highlightName = (name: string, query: string) => {
-                            if (!query || etf.Symbol.toLowerCase().includes(query.toLowerCase())) {
+                            if (!query) {
                               return name;
                             }
                             
@@ -469,7 +469,7 @@ export default function PortfolioPage() {
                       <div className="max-h-48 overflow-y-auto rounded-lg border border-stone-700/80 bg-stone-900/95">
                         {filteredKsRemaining.slice(0, 20).map((item) => {
                           const highlightName = (name: string, query: string) => {
-                            if (!query || item.ticker.includes(query)) {
+                            if (!query) {
                               return name;
                             }
                             
