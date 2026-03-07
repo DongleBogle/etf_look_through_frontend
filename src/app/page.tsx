@@ -116,8 +116,8 @@ const EtfChipGroup = ({
 
 export default function PortfolioPage() {
   const [usTickers, setUsTickers] = useState("SPY, QQQ");
-  const [ksTickers, setKsTickers] = useState("069500");
-  const [ksTickersDisplay, setKsTickersDisplay] = useState("KODEX 200");
+  const [ksTickers, setKsTickers] = useState("");
+  const [ksTickersDisplay, setKsTickersDisplay] = useState("");
   const [isDirectInput, setIsDirectInput] = useState(false);
   const [showUsSearch, setShowUsSearch] = useState(false);
   const [usSearchQuery, setUsSearchQuery] = useState("");
@@ -191,7 +191,7 @@ export default function PortfolioPage() {
   const [quantities, setQuantities] = useState<Record<string, number>>({
     SPY: 10,
     QQQ: 10,
-    "069500.KS": 10,
+    // "069500.KS": 10,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -404,8 +404,8 @@ export default function PortfolioPage() {
                   )}
                 </div>
 
-                {/* 한국 ETF */}
-                <div>
+{/* 한국 ETF */}
+                {/* <div>
                   <p className="mb-2 text-xs text-stone-600">한국 ETF</p>
                   <EtfChipGroup
                     items={(() => {
@@ -504,7 +504,7 @@ export default function PortfolioPage() {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             )}
 
