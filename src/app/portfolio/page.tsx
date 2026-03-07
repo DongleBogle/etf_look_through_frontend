@@ -192,6 +192,8 @@ export default function PortfolioPage() {
   const [kqTickers, setKqTickers] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+  const [splashProgress, setSplashProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Awaited<
     ReturnType<typeof analyzePortfolio>
@@ -242,8 +244,19 @@ export default function PortfolioPage() {
 
   const handleAnalyze = async () => {
     setLoading(true);
+    setShowSplash(true);
+    setSplashProgress(0);
     setError(null);
     setResult(null);
+
+    // 프로그레스 애니메이션 (90%까지 점진적으로)
+    const progressInterval = setInterval(() => {
+      setSplashProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 12;
+      });
+    }, 300);
+
     try {
       const body = {
         us_tickers: usList,
@@ -252,11 +265,17 @@ export default function PortfolioPage() {
         quantities,
       };
       const data = await analyzePortfolio(body);
+      clearInterval(progressInterval);
+      setSplashProgress(100);
+      // 완료 후 잠시 대기 후 스플래시 닫기
+      await new Promise((r) => setTimeout(r, 600));
       setResult(data);
     } catch (e) {
+      clearInterval(progressInterval);
       setError(e instanceof Error ? e.message : "분석 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
+      setShowSplash(false);
     }
   };
 
@@ -264,7 +283,66 @@ export default function PortfolioPage() {
 
   // 페이지 진입 시 자동 분석 제거 - 사용자가 직접 "분석 실행" 클릭 시에만 요청
 
+  const splashMessages = [
+    "ETF 구성 종목을 불러오는 중...",
+    "보유 비중을 계산하는 중...",
+    "중복 종목을 통합하는 중...",
+    "포트폴리오를 분석하는 중...",
+    "거의 다 됐어요!",
+  ];
+  const splashMessageIndex = Math.min(
+    Math.floor(splashProgress / 20),
+    splashMessages.length - 1
+  );
+
   return (
+    <>
+      {/* 스플래시 스크린 */}
+      {showSplash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center gap-8 px-6">
+            {/* 로고 애니메이션 */}
+            <div className="relative">
+              <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-toss-blue shadow-lg shadow-toss-blue/30">
+                <BarChart3 className="h-12 w-12 text-white animate-pulse" />
+              </div>
+              {splashProgress >= 100 && (
+                <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 shadow-md">
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* 텍스트 */}
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-toss-gray-900">
+                {splashProgress >= 100 ? "분석 완료!" : "포트폴리오 분석 중"}
+              </h2>
+              <p className="mt-2 text-sm text-toss-gray-500 transition-all duration-300">
+                {splashProgress >= 100
+                  ? "결과를 준비하고 있어요"
+                  : splashMessages[splashMessageIndex]}
+              </p>
+            </div>
+
+            {/* 프로그레스 바 */}
+            <div className="w-64">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-toss-gray-100">
+                <div
+                  className="h-full rounded-full bg-toss-blue transition-all duration-300 ease-out"
+                  style={{ width: `${Math.min(splashProgress, 100)}%` }}
+                />
+              </div>
+              <p className="mt-2 text-center text-xs font-semibold tabular-nums text-toss-gray-400">
+                {Math.min(Math.round(splashProgress), 100)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="space-y-8">
       <div>
         <h1 className="flex items-center gap-3 text-2xl font-bold text-toss-gray-900">
@@ -1001,5 +1079,6 @@ export default function PortfolioPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
