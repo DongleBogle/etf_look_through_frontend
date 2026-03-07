@@ -922,24 +922,26 @@ export default function PortfolioPage() {
                   <div className="px-5 py-4">
                     {chartType === "bar" ? (
                       <div style={{ height: Math.max(300, (() => {
-                        const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
-                        return Math.min(filteredData.length, 15) * 36 + 40;
+                        const barCount = Math.min(result.exposures.length, 15) + (result.exposures.length > 15 ? 1 : 0);
+                        return barCount * 36 + 40;
                       })()) }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             layout="vertical"
                             data={(() => {
-                              const filteredData = result.exposures.filter(e => e.name !== "기타(미분류)");
-                              const displayData = filteredData.slice(0, 15).map(e => ({
-                                ...e,
-                                name: e.name === "기타(미분류)" ? "기타" : e.name
-                              }));
-                              const remainingCount = filteredData.length - 15;
+                              const displayData = result.exposures.slice(0, 15).map(e => ({ ...e, isEtc: false }));
+                              const remainingCount = result.exposures.length - 15;
                               if (remainingCount > 0) {
-                                displayData[displayData.length - 1] = {
-                                  ...displayData[displayData.length - 1],
-                                  name: displayData[displayData.length - 1].name + ` (+${remainingCount}개)`
-                                };
+                                const rest = result.exposures.slice(15);
+                                const restWeightSum = rest.reduce((sum, e) => sum + e.weight_pct, 0);
+                                const restAmountSum = rest.reduce((sum, e) => sum + e.amount_usd, 0);
+                                displayData.push({
+                                  name: `기타 ${remainingCount}개`,
+                                  weight_pct: restWeightSum,
+                                  amount_usd: restAmountSum,
+                                  amount_krw: 0,
+                                  isEtc: true,
+                                } as any);
                               }
                               return displayData;
                             })()}
@@ -981,7 +983,15 @@ export default function PortfolioPage() {
                                 marginBottom: "4px",
                               }}
                             />
-                            <Bar dataKey="weight_pct" fill="#3182f6" radius={[0, 6, 6, 0]} barSize={20} />
+                            <Bar dataKey="weight_pct" radius={[0, 6, 6, 0]} barSize={20}>
+                              {(() => {
+                                const displayData = result.exposures.slice(0, 15).map(() => false);
+                                if (result.exposures.length > 15) displayData.push(true);
+                                return displayData.map((isEtc, i) => (
+                                  <Cell key={i} fill={isEtc ? "#d1d6db" : CHART_COLORS[i % CHART_COLORS.length]} />
+                                ));
+                              })()}
+                            </Bar>
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
